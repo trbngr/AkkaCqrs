@@ -14,8 +14,7 @@ namespace Core.Domain
 
         public static IActorRef AccountAggregate(this ActorSystem system, Guid id)
         {
-            var projectionsProps = Props.Create<ReadModelProjections>()
-                .WithRouter(new ConsistentHashingGroup());
+            var projectionsProps = new ConsistentHashingPool(2).Props(Props.Create<ReadModelProjections>());
 
             var projections = system.ActorOf(projectionsProps, SystemData.ProjectionsActor.Name);
 

@@ -11,7 +11,7 @@ namespace Core
 
             Receive<IEvent>(x =>
             {
-                logger.Info("Collect event: {0}", x);
+//                logger.Info("Collect event: {0}", x);
             });
         }
     }
