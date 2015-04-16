@@ -66,6 +66,7 @@
     <Compile Include="Domain\Account.cs" />
     <Compile Include="Domain\AccountState.cs" />
     <Compile Include="Domain\AggregateFactory.cs" />
+    <Compile Include="StatsActor.cs" />
     <Compile Include="Storage\FileSystem\FileSystemStorage.cs" />
     <Compile Include="Storage\IStorageProvider.cs" />
     <Compile Include="Storage\Messages\AddNewEntity.cs" />
@@ -94,7 +95,7 @@
     <Compile Include="Messages\SaveAggregate.cs" />
     <Compile Include="Messages\Account\AccountCreated.cs" />
     <Compile Include="SystemClock.cs" />
-    <Compile Include="Domain\AggregateRoot.cs" />
+    <Compile Include="Domain\AggregateRootActor.cs" />
     <Compile Include="ICommand.cs" />
     <Compile Include="IEvent.cs" />
     <Compile Include="IMessage.cs" />

@@ -5,7 +5,7 @@ using Core.Messages.Account;
 
 namespace Core.Domain
 {
-    public class Account : AggregateRoot
+    public class Account : AggregateRootActor
     {
         private AccountState _state;
 

@@ -42,6 +42,8 @@ namespace Core.Storage.Projections
                     }
                     Context.ActorSelection(path).Tell(x);
                 }
+
+                Context.System.EventStream.Publish(x);
             });
         }
 
@@ -52,7 +54,7 @@ namespace Core.Storage.Projections
                 {
                     _log.Info("{0}", e.GetType().Name);
 
-                    if (e is IOException)
+                    if (e is IOException || e.InnerException is IOException)
                         return Directive.Restart;
 
                     return Directive.Stop;

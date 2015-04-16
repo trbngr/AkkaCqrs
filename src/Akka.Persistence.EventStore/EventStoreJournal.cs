@@ -98,20 +98,21 @@ namespace EventStore.Persistence
 
             foreach (var grouping in messages.GroupBy(x => x.PersistenceId))
             {
-                var stream = grouping.Key;
+                var persistenceId = grouping.Key;
 
                 var representations = grouping.OrderBy(x => x.SequenceNr).ToArray();
                 var expectedVersion = (int)representations.Last().SequenceNr - 2;
 
                 var events = representations.Select(x =>
                 {
+                    var eventId = GuidUtility.Create(GuidUtility.IsoOidNamespace, string.Concat(persistenceId, x.SequenceNr));
                     var json = JsonConvert.SerializeObject(x, _serializerSettings);
                     var data = Encoding.UTF8.GetBytes(json);
                     var meta = new byte[0];
-                    return new EventData(Guid.NewGuid(), x.GetType().FullName, true, data, meta);
+                    return new EventData(eventId, x.GetType().FullName, true, data, meta);
                 });
 
-                await connection.AppendToStreamAsync(stream, expectedVersion, events);
+                await connection.AppendToStreamAsync(persistenceId, expectedVersion, events);
             }
         }
 

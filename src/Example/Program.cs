@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Threading.Tasks;
 using Akka.Actor;
-using Autofac;
 using Core;
 using Core.Domain;
 using Core.Messages;
 using Core.Messages.Account;
-using Core.Storage.FileSystem;
-using Core.Storage.Projections;
-using Nito.AsyncEx;
 
 namespace Example
 {
@@ -18,15 +13,16 @@ namespace Example
         {
             var system = ActorSystem.Create(SystemData.SystemName);
 
-            var id = Guid.Parse("1c765aa2553c42c9a2f4dfb87cc197ee");
+            var id = Guid.Parse("7a609341bf8a45f4805ff3ad775af851");
 
-            var projections = system.ActorOf(Props.Create<ReadModelProjections>(), SystemData.ProjectionsActor.Name);
+            var stats = system.ActorOf(Props.Create<StatsActor>());
+            system.EventStream.Subscribe(stats, typeof (IEvent));
 
-            var actor = system.AccountAggregate(id, projections);
+            var actor = system.AccountAggregate(id);
 
             actor.Tell(new CreateAccount(id, "savings"));
-//            actor.Tell(new MakeDeposit(id, 40));
-//            actor.Tell(new MakeWithdrawal(id, 20));
+            actor.Tell(new MakeDeposit(id, 40));
+            actor.Tell(new MakeWithdrawal(id, 20));
 //            actor.Tell(new MakeWithdrawal(id, 20));
 //            actor.Tell(new MakeDeposit(id, 100));
 //            actor.Tell(new MakeWithdrawal(id, 20));

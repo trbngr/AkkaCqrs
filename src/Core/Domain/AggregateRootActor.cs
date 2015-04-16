@@ -8,13 +8,13 @@ using Core.Messages;
 
 namespace Core.Domain
 {
-    public abstract class AggregateRoot : PersistentActor, IEventSink
+    public abstract class AggregateRootActor : PersistentActor, IEventSink
     {
         private readonly IActorRef _projections;
         private readonly ICollection<Exception> _exceptions;
         private readonly ILoggingAdapter _log;
 
-        protected AggregateRoot(Guid id, IActorRef projections)
+        protected AggregateRootActor(Guid id, IActorRef projections)
         {
             _projections = projections;
             Id = id;
@@ -34,7 +34,7 @@ namespace Core.Domain
             Persist(@event, e =>
             {
                 Apply(e);
-                _projections.Tell(e);
+                _projections.Tell(@event);
             });
         }
 

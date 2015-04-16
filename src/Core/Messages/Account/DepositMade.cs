@@ -2,19 +2,14 @@
 
 namespace Core.Messages.Account
 {
-    public class DepositMade : IEvent
+    public class DepositMade : Event
     {
-        public DepositMade(Guid aggregateId, decimal amount)
+        public DepositMade(Guid aggregateId, decimal amount) : base(aggregateId)
         {
-            AggregateId = aggregateId;
             Amount = amount;
-            UtcDate = SystemClock.UtcNow;
         }
 
         public decimal Amount { get; private set; }
-        public Guid AggregateId { get; private set; }
-
-        public DateTime UtcDate { get; private set; }
 
         public override string ToString()
         {

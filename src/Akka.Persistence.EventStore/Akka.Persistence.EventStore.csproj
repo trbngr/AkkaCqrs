@@ -76,6 +76,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GuidUtility.cs" />
     <Compile Include="EventStoreJournal.cs" />
     <Compile Include="EventStoreSnapshotStore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -2,23 +2,18 @@
 
 namespace Core.Messages.Account
 {
-    public class AccountNameChanged : IEvent
+    public class AccountNameChanged : Event
     {
-        public Guid AggregateId { get; private set; }
-        public string Name { get; private set; }
-
-        public AccountNameChanged(Guid aggregateId, string name)
+        public AccountNameChanged(Guid aggregateId, string name) : base(aggregateId)
         {
-            AggregateId = aggregateId;
             Name = name;
-            UtcDate = SystemClock.UtcNow;
         }
+
+        public string Name { get; private set; }
 
         public override string ToString()
         {
             return string.Format("Account with id {0:n} has had its name changed to {1}", AggregateId, Name);
         }
-
-        public DateTime UtcDate { get; private set; }
     }
 }

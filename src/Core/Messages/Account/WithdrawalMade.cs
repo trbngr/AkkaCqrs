@@ -2,21 +2,16 @@
 
 namespace Core.Messages.Account
 {
-    public class WithdrawalMade : IEvent
+    public class WithdrawalMade : Event
     {
-        public WithdrawalMade(Guid aggregateId, decimal amount, decimal newBalance)
+        public WithdrawalMade(Guid aggregateId, decimal amount, decimal newBalance) : base(aggregateId)
         {
-            AggregateId = aggregateId;
             Amount = amount;
             NewBalance = newBalance;
-            UtcDate = SystemClock.UtcNow;
         }
 
         public decimal Amount { get; private set; }
         public decimal NewBalance { get; private set; }
-        public Guid AggregateId { get; private set; }
-
-        public DateTime UtcDate { get; private set; }
 
         public override string ToString()
         {
