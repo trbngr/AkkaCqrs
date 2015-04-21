@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Threading;
 using Akka.Actor;
-using Akka.Event;
 using Core;
-using Core.Domain;
-using Core.Messages;
 using Core.Messages.Account;
-using Debug = System.Diagnostics.Debug;
 
 namespace Example
 {
@@ -15,66 +10,29 @@ namespace Example
         private static void Main()
         {
             var system = ActorSystem.Create(SystemData.SystemName);
-
-            var id = Guid.Parse("bd75ef4da4b44330b2a0683895572055");
-
+            
             var stats = system.ActorOf(Props.Create<StatsActor>(), "statscollector");
+            var opWatch = system.ActorOf<OperationWatcher>("operations");
             system.EventStream.Subscribe(stats, typeof (IEvent));
+            system.EventStream.Subscribe(opWatch, typeof(IEvent));
 
-            var actor = system.AccountAggregate(id);
-
-//            actor.Tell(new CreateAccount(id, "savings"));
-
-            Thread.Sleep(500);
-            actor.Tell(new MakeDeposit(id, 40));
-
-            Thread.Sleep(500);
-            actor.Tell(new MakeWithdrawal(id, 20));
-
-            Thread.Sleep(500);
-            actor.Tell(new MakeWithdrawal(id, 20));
-
-            Thread.Sleep(500);
-            actor.Tell(new MakeDeposit(id, 100));
-
-            Thread.Sleep(500);
-            actor.Tell(new MakeWithdrawal(id, 20));
-
-            Thread.Sleep(500);
-            actor.Tell(new MakeWithdrawal(id, 20));
-
-            Thread.Sleep(500);
-            actor.Tell(new MakeWithdrawal(id, 20));
-
-            Thread.Sleep(500);
-            actor.Tell(new MakeDeposit(id, 1500));
-
-            var response = actor.Ask<CurrentBalanceResponse>(new GetCurrentBalance(id)).Result;
-
-            Console.Out.WriteLine("Current balance is: {0:c}", response.Balance);
-//            Debug.Assert(response.Balance == 1540m);
-
-            actor.Tell(SaveAggregate.Message);
-
-            Console.Out.WriteLine("Press Enter to exit");
-            Console.ReadLine();
-            system.Shutdown();
+            IActorRef actor = system.ActorOf<AccountWorker>();
+            
+            Console.Clear();
+            Console.Out.Write("Enter a new account name: ");
+            var name = Console.ReadLine();
+            actor.Tell(new CreateAccount(Guid.NewGuid(), name));
+            
+            system.AwaitTermination();
         }
 
-        private static void WriteResponse(CommandResponse response)
+        class OperationWatcher : ReceiveActor
         {
-            if (response == null)
-                return;
-
-            var exception = response.Exception;
-            if (exception != null)
+            public OperationWatcher()
             {
-                exception.Flatten().Handle(x =>
+                Receive<IEvent>(x =>
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.Out.WriteLine(x.Message);
-                    Console.ResetColor();
-                    return true;
+                    Console.Out.WriteLine(x);
                 });
             }
         }

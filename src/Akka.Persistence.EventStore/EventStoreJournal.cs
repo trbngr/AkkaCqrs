@@ -6,6 +6,7 @@ using System.Runtime.Serialization.Formatters;
 using System.Text;
 using System.Threading.Tasks;
 using Akka.Actor;
+using Akka.Event;
 using Akka.Persistence;
 using Akka.Persistence.Journal;
 using EventStore.ClientAPI;
@@ -19,9 +20,12 @@ namespace EventStore.Persistence
         private const int BatchSize = 500;
         private readonly Lazy<Task<IEventStoreConnection>> _connection;
         private readonly JsonSerializerSettings _serializerSettings;
+        private ILoggingAdapter _log;
 
         public EventStoreJournal()
         {
+            _log = Context.GetLogger();
+
             _serializerSettings = new JsonSerializerSettings
             {
                 TypeNameHandling = TypeNameHandling.Objects,
@@ -43,7 +47,6 @@ namespace EventStore.Persistence
                 
                 IEventStoreConnection connection = EventStoreConnection.Create(settings, endPoint, "akka.net");
                 await connection.ConnectAsync();
-                
                 return connection;
             });
         }
@@ -70,7 +73,7 @@ namespace EventStore.Persistence
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                _log.Error(e, e.Message);
                 throw;
             }
         }
@@ -92,7 +95,7 @@ namespace EventStore.Persistence
                     {
                         var json = Encoding.UTF8.GetString(@event.OriginalEvent.Data);
                         var representation = JsonConvert.DeserializeObject<IPersistentRepresentation>(json, _serializerSettings);
-                        Console.Out.WriteLine("Replay: {0}", representation.Payload.GetType());
+                        _log.Debug("Replay: {0}", representation.Payload.GetType());
                         replayCallback(representation);
                     }
                 
@@ -110,7 +113,7 @@ namespace EventStore.Persistence
         protected override async Task WriteMessagesAsync(IEnumerable<IPersistentRepresentation> messages)
         {
             var connection = await GetConnection();
-            Console.Out.WriteLine("BEGIN");
+            _log.Debug("BEGIN");
             foreach (var grouping in messages.GroupBy(x => x.PersistenceId))
             {
                 var stream = grouping.Key;
@@ -121,7 +124,7 @@ namespace EventStore.Persistence
 
                 var events = representations.Select(x =>
                 {
-                    Console.Out.WriteLine("\tSequenceNr: {0}", x.SequenceNr);
+                    _log.Debug("\tSequenceNr: {0}", x.SequenceNr);
 
                     var eventId = GuidUtility.Create(GuidUtility.IsoOidNamespace, string.Concat(stream, x.SequenceNr));
                     var json = JsonConvert.SerializeObject(x, _serializerSettings);
@@ -130,10 +133,10 @@ namespace EventStore.Persistence
                     return new EventData(eventId, x.GetType().FullName, true, data, meta);
                 });
 
-                Console.Out.WriteLine("\tExpect version: {0}", expectedVersion);
+                _log.Debug("\tExpect version: {0}", expectedVersion);
 
                 await connection.AppendToStreamAsync(stream, expectedVersion < 0 ? ExpectedVersion.NoStream : expectedVersion, events);
-                Console.Out.WriteLine("END");
+                _log.Debug("END");
             }
         }
 

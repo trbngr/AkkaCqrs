@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using Akka.Event;
 using Akka.Persistence;
 using Akka.Persistence.Serialization;
 using Akka.Persistence.Snapshot;
@@ -18,6 +19,7 @@ namespace EventStore.Persistence
         private readonly Lazy<Task<IEventStoreConnection>> _connection;
 
         private readonly Serializer _serializer;
+        private ILoggingAdapter _log;
 
         public EventStoreSnapshotStore()
         {
@@ -37,6 +39,8 @@ namespace EventStore.Persistence
                 
                 return connection;
             });
+
+            _log = Context.GetLogger();
         }
 
         private Task<IEventStoreConnection> GetConnection()
@@ -58,11 +62,9 @@ namespace EventStore.Persistence
 
             if (slice.Events.Any())
             {
+                _log.Debug("Found snapshot of {0}", persistenceId);
                 var @event = slice.Events.First().OriginalEvent;
-
-                var snapshot = (SelectedSnapshot)_serializer.FromBinary(@event.Data, typeof(SelectedSnapshot));
-
-                return snapshot;
+                return (SelectedSnapshot)_serializer.FromBinary(@event.Data, typeof(SelectedSnapshot));
             }
 
             return null;

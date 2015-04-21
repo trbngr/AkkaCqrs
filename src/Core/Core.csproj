@@ -77,6 +77,7 @@
     <Compile Include="Storage\Messages\GetEntity.cs" />
     <Compile Include="Storage\Messages\UpdateEntity.cs" />
     <Compile Include="Storage\Projections\Account\AccountCreated.cs" />
+    <Compile Include="Storage\Projections\Account\AccountNameChanged.cs" />
     <Compile Include="Storage\Projections\Account\DepositMade.cs" />
     <Compile Include="Storage\Projections\Account\WithdrawalMade.cs" />
     <Compile Include="Storage\Projections\ReadModelProjections.cs" />

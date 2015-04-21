@@ -89,9 +89,17 @@ namespace Core.Domain
 
             if (message.WasHandled<ICommand>(command =>
             {
-                var handled = HandleAndRecordExceptions(command);
-                Sender.Tell(new CommandResponse(handled, _exceptions));
-                return handled;
+                try
+                {
+                    var handled = Handle(command);
+                    Sender.Tell(new CommandResponse(handled, _exceptions));
+                    return handled;
+                }
+                catch (Exception e)
+                {
+                    Sender.Tell(e);
+                    return false;
+                }
             }))
                 return true;
 
@@ -104,20 +112,6 @@ namespace Core.Domain
                 SaveSnapshot(GetState());
 
             return true;
-        }
-
-        private bool HandleAndRecordExceptions(ICommand command)
-        {
-            try
-            {
-                return Handle(command);
-            }
-            catch (Exception e)
-            {
-                _exceptions.Add(e);
-            }
-
-            return false;
         }
 
         protected abstract bool Handle(ICommand command);
