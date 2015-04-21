@@ -34,5 +34,10 @@ namespace Core.Storage.Projections.Account
         {
             _log.Info("Entity {0}/{1:n} created.", message.Entity.GetType().Name, message.Key);
         }
+
+        protected override SupervisorStrategy SupervisorStrategy()
+        {
+            return ReadModelProjectionSupervisorStrategy.Instance;
+        }
     }
 }

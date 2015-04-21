@@ -10,7 +10,7 @@ namespace Core.Extensions
             return message is TMessage ? (TMessage)message : default(TMessage);
         }
 
-        public static bool Recieve<TMessage>(this object message, Action<TMessage> action)
+        public static bool CanHandle<TMessage>(this object message, Action<TMessage> action)
         {
             if (!(message is TMessage))
                 return false;
@@ -19,7 +19,7 @@ namespace Core.Extensions
             return true;
         }
 
-        public static bool Recieve<TMessage>(this object message, Func<TMessage, bool> action)
+        public static bool WasHandled<TMessage>(this object message, Func<TMessage, bool> action)
         {
             if (!(message is TMessage))
                 return false;

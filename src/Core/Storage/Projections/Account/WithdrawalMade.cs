@@ -57,16 +57,7 @@ namespace Core.Storage.Projections.Account
 
         protected override SupervisorStrategy SupervisorStrategy()
         {
-            return new OneForOneStrategy(maxNrOfRetries: 10, withinTimeRange: TimeSpan.FromSeconds(30), decider: new LocalOnlyDecider(
-                e =>
-                {
-                    _log.Info("{0}", e.GetType().Name);
-
-                    if (e is IOException)
-                        return Directive.Restart;
-
-                    return Directive.Stop;
-                }));
+            return ReadModelProjectionSupervisorStrategy.Instance;
         }
     }
 }

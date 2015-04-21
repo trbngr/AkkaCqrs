@@ -55,64 +55,85 @@ namespace EventStore.Persistence
 
         public override async Task<long> ReadHighestSequenceNrAsync(string persistenceId, long fromSequenceNr)
         {
-            var connection = await GetConnection();
+            try
+            {
+                var connection = await GetConnection();
 
-            var slice = await connection.ReadStreamEventsBackwardAsync(persistenceId, StreamPosition.End, 1, false);
+                var slice = await connection.ReadStreamEventsBackwardAsync(persistenceId, StreamPosition.End, 1, false);
 
-            long sequence = 0;
+                long sequence = 0;
 
-            if (slice.Events.Any())
-                sequence = slice.Events.First().OriginalEventNumber + 1;
+                if (slice.Events.Any())
+                    sequence = slice.Events.First().OriginalEventNumber + 1;
 
-            return sequence;
+                return sequence;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         public override async Task ReplayMessagesAsync(string persistenceId, long fromSequenceNr, long toSequenceNr, long max, Action<IPersistentRepresentation> replayCallback)
         {
-            var connection = await GetConnection();
-
-            var sequenceNr = ((int)fromSequenceNr -1);
-            if (sequenceNr < 0)
-                sequenceNr = 0;
-
-            StreamEventsSlice slice;
-            do
+            try
             {
-                slice = await connection.ReadStreamEventsForwardAsync(persistenceId, sequenceNr, BatchSize, false);
+                var connection = await GetConnection();
 
-                foreach (var @event in slice.Events)
+                var start = ((int) fromSequenceNr - 1);
+
+                StreamEventsSlice slice;
+                do
                 {
-                    var json = Encoding.UTF8.GetString(@event.OriginalEvent.Data);
-                    var representation = JsonConvert.DeserializeObject<IPersistentRepresentation>(json, _serializerSettings);
-                    replayCallback(representation);
-                }
-                
-                sequenceNr = slice.NextEventNumber;
+                    slice = await connection.ReadStreamEventsForwardAsync(persistenceId, start, BatchSize, false);
 
-            } while (!slice.IsEndOfStream);
+                    foreach (var @event in slice.Events)
+                    {
+                        var json = Encoding.UTF8.GetString(@event.OriginalEvent.Data);
+                        var representation = JsonConvert.DeserializeObject<IPersistentRepresentation>(json, _serializerSettings);
+                        Console.Out.WriteLine("Replay: {0}", representation.Payload.GetType());
+                        replayCallback(representation);
+                    }
+                
+                    start = slice.NextEventNumber;
+
+                } while (!slice.IsEndOfStream);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         protected override async Task WriteMessagesAsync(IEnumerable<IPersistentRepresentation> messages)
         {
             var connection = await GetConnection();
-
+            Console.Out.WriteLine("BEGIN");
             foreach (var grouping in messages.GroupBy(x => x.PersistenceId))
             {
-                var persistenceId = grouping.Key;
+                var stream = grouping.Key;
+                Console.Out.WriteLine("\t{0}", stream);
 
                 var representations = grouping.OrderBy(x => x.SequenceNr).ToArray();
-                var expectedVersion = (int)representations.Last().SequenceNr - 2;
+                var expectedVersion = (int)representations.First().SequenceNr - 2;
 
                 var events = representations.Select(x =>
                 {
-                    var eventId = GuidUtility.Create(GuidUtility.IsoOidNamespace, string.Concat(persistenceId, x.SequenceNr));
+                    Console.Out.WriteLine("\tSequenceNr: {0}", x.SequenceNr);
+
+                    var eventId = GuidUtility.Create(GuidUtility.IsoOidNamespace, string.Concat(stream, x.SequenceNr));
                     var json = JsonConvert.SerializeObject(x, _serializerSettings);
                     var data = Encoding.UTF8.GetBytes(json);
                     var meta = new byte[0];
                     return new EventData(eventId, x.GetType().FullName, true, data, meta);
                 });
 
-                await connection.AppendToStreamAsync(persistenceId, expectedVersion, events);
+                Console.Out.WriteLine("\tExpect version: {0}", expectedVersion);
+
+                await connection.AppendToStreamAsync(stream, expectedVersion < 0 ? ExpectedVersion.NoStream : expectedVersion, events);
+                Console.Out.WriteLine("END");
             }
         }
 

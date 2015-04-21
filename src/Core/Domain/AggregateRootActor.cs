@@ -8,26 +8,44 @@ using Core.Messages;
 
 namespace Core.Domain
 {
+    public class AggregateRootCreationParameters
+    {
+        public AggregateRootCreationParameters(Guid id, IActorRef projections, int snapshotThreshold = 250)
+        {
+            Id = id;
+            Projections = projections;
+            SnapshotThreshold = snapshotThreshold;
+        }
+
+        public Guid Id { get; private set; }
+        public IActorRef Projections { get; private set; }
+        public int SnapshotThreshold { get; private set; }
+    }
+
     public abstract class AggregateRootActor : PersistentActor, IEventSink
     {
+        private readonly Guid _id;
         private readonly IActorRef _projections;
+        private readonly int _snapshotThreshold;
         private readonly ICollection<Exception> _exceptions;
         private readonly ILoggingAdapter _log;
 
-        protected AggregateRootActor(Guid id, IActorRef projections)
+        protected AggregateRootActor(AggregateRootCreationParameters parameters)
         {
-            _projections = projections;
-            Id = id;
+            _id = parameters.Id;
+            _projections = parameters.Projections;
+            _snapshotThreshold = parameters.SnapshotThreshold;
+
             _exceptions = new List<Exception>();
             _log = Context.GetLogger();
         }
 
         public override string PersistenceId
         {
-            get { return string.Format("{0}-agg-{1:n}", GetType().Name, Id).ToLowerInvariant(); }
+            get { return string.Format("{0}-agg-{1:n}", GetType().Name, _id).ToLowerInvariant(); }
         }
 
-        public Guid Id { get; private set; }
+        private long LastSnapshottedVersion { get; set; }
 
         void IEventSink.Publish(IEvent @event)
         {
@@ -40,7 +58,7 @@ namespace Core.Domain
 
         protected override bool ReceiveRecover(object message)
         {
-            if (message.Recieve<RecoveryCompleted>(x =>
+            if (message.CanHandle<RecoveryCompleted>(x =>
             {
                 _log.Debug("Recovered state to version {0}", LastSequenceNr);
             }))
@@ -51,10 +69,11 @@ namespace Core.Domain
             {
                 var offer = snapshot.Value;
                 _log.Debug("State loaded from snapshot");
+                LastSnapshottedVersion = offer.Metadata.SequenceNr;
                 return RecoverState(offer.Snapshot);
             }
 
-            if (message.Recieve<IEvent>(@event =>
+            if (message.CanHandle<IEvent>(@event =>
             {
                 Apply(@event);
             }))
@@ -65,10 +84,10 @@ namespace Core.Domain
 
         protected override bool ReceiveCommand(object message)
         {
-            if (message.Recieve<SaveAggregate>(x => Save()))
+            if (message.WasHandled<SaveAggregate>(x => Save()))
                 return true;
 
-            if (message.Recieve<ICommand>(command =>
+            if (message.WasHandled<ICommand>(command =>
             {
                 var handled = HandleAndRecordExceptions(command);
                 Sender.Tell(new CommandResponse(handled, _exceptions));
@@ -81,7 +100,7 @@ namespace Core.Domain
 
         private bool Save()
         {
-//            if ((Version - LastSequenceNr) > 2)
+            if ((LastSequenceNr - LastSnapshottedVersion) >= _snapshotThreshold)
                 SaveSnapshot(GetState());
 
             return true;

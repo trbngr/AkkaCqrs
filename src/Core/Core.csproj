@@ -80,6 +80,7 @@
     <Compile Include="Storage\Projections\Account\DepositMade.cs" />
     <Compile Include="Storage\Projections\Account\WithdrawalMade.cs" />
     <Compile Include="Storage\Projections\ReadModelProjections.cs" />
+    <Compile Include="Storage\Projections\ReadModelProjectionSupervisorStrategy.cs" />
     <Compile Include="SystemData.cs" />
     <Compile Include="Domain\DomainException.cs" />
     <Compile Include="Domain\IEventSink.cs" />

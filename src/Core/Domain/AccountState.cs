@@ -10,6 +10,16 @@ namespace Core.Domain
             Events = events;
         }
 
+        public void Handle(ICommand command)
+        {
+            ((dynamic)this).Handle((dynamic)command);
+        }
+
+        public void Mutate(IEvent @event)
+        {
+            ((dynamic)this).Apply((dynamic)@event);
+        }
+
         public bool Created { get; set; }
         public string Name { get; set; }
         public decimal Balance { get; set; }

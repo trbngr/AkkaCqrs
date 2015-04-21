@@ -7,18 +7,15 @@ namespace Core.Domain
 {
     public static class AggregateFactory
     {
-        public static IActorRef AccountAggregate(this IUntypedActorContext context, Guid id)
+        public static IActorRef AccountAggregate(this ActorSystem system, Guid id, int snapshotThreshold = 250)
         {
-            return context.ActorOf(Props.Create<Account>(id), "aggregates(account)");
-        }
-
-        public static IActorRef AccountAggregate(this ActorSystem system, Guid id)
-        {
-            var projectionsProps = new ConsistentHashingPool(2).Props(Props.Create<ReadModelProjections>());
+            var projectionsProps = new ConsistentHashingPool(5).Props(Props.Create<ReadModelProjections>());
 
             var projections = system.ActorOf(projectionsProps, SystemData.ProjectionsActor.Name);
 
-            return system.ActorOf(Props.Create<Account>(id, projections), "aggregates(account)");
+            var creationParams = new AggregateRootCreationParameters(id, projections, snapshotThreshold);
+
+            return system.ActorOf(Props.Create<Account>(creationParams), "aggregates(account)");
         }
     }
 }
