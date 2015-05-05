@@ -19,7 +19,7 @@ namespace EventStore.Persistence
         private readonly Lazy<Task<IEventStoreConnection>> _connection;
 
         private readonly Serializer _serializer;
-        private ILoggingAdapter _log;
+        private readonly ILoggingAdapter _log;
 
         public EventStoreSnapshotStore()
         {

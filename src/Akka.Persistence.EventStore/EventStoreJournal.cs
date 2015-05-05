@@ -9,6 +9,7 @@ using Akka.Actor;
 using Akka.Event;
 using Akka.Persistence;
 using Akka.Persistence.Journal;
+using Akka.Serialization;
 using EventStore.ClientAPI;
 using EventStore.ClientAPI.SystemData;
 using Newtonsoft.Json;
@@ -19,23 +20,15 @@ namespace EventStore.Persistence
     {
         private const int BatchSize = 500;
         private readonly Lazy<Task<IEventStoreConnection>> _connection;
-        private readonly JsonSerializerSettings _serializerSettings;
-        private ILoggingAdapter _log;
+        private readonly ILoggingAdapter _log;
+        private readonly Serializer _serializer;
 
         public EventStoreJournal()
         {
             _log = Context.GetLogger();
 
-            _serializerSettings = new JsonSerializerSettings
-            {
-                TypeNameHandling = TypeNameHandling.Objects,
-                TypeNameAssemblyFormat = FormatterAssemblyStyle.Simple,
-                Formatting = Formatting.Indented,
-                Converters =
-                {
-                    new ActorRefConverter(Context)
-                }
-            };
+            var serialization = Context.System.Serialization;
+            _serializer = serialization.FindSerializerForType(typeof(IPersistentRepresentation));
 
             _connection = new Lazy<Task<IEventStoreConnection>>(async () =>
             {
@@ -93,8 +86,10 @@ namespace EventStore.Persistence
 
                     foreach (var @event in slice.Events)
                     {
-                        var json = Encoding.UTF8.GetString(@event.OriginalEvent.Data);
-                        var representation = JsonConvert.DeserializeObject<IPersistentRepresentation>(json, _serializerSettings);
+                        var representation = (IPersistentRepresentation)_serializer.FromBinary(@event.OriginalEvent.Data, typeof(IPersistentRepresentation));
+
+//                        var json = Encoding.UTF8.GetString(@event.OriginalEvent.Data);
+//                        var representation = JsonConvert.DeserializeObject<IPersistentRepresentation>(json, _serializerSettings);
                         _log.Debug("Replay: {0}", representation.Payload.GetType());
                         replayCallback(representation);
                     }
@@ -113,30 +108,24 @@ namespace EventStore.Persistence
         protected override async Task WriteMessagesAsync(IEnumerable<IPersistentRepresentation> messages)
         {
             var connection = await GetConnection();
-            _log.Debug("BEGIN");
+            
             foreach (var grouping in messages.GroupBy(x => x.PersistenceId))
             {
                 var stream = grouping.Key;
-                Console.Out.WriteLine("\t{0}", stream);
 
                 var representations = grouping.OrderBy(x => x.SequenceNr).ToArray();
                 var expectedVersion = (int)representations.First().SequenceNr - 2;
 
                 var events = representations.Select(x =>
                 {
-                    _log.Debug("\tSequenceNr: {0}", x.SequenceNr);
-
+                    var data = _serializer.ToBinary(x);
                     var eventId = GuidUtility.Create(GuidUtility.IsoOidNamespace, string.Concat(stream, x.SequenceNr));
-                    var json = JsonConvert.SerializeObject(x, _serializerSettings);
-                    var data = Encoding.UTF8.GetBytes(json);
+                    
                     var meta = new byte[0];
                     return new EventData(eventId, x.GetType().FullName, true, data, meta);
                 });
 
-                _log.Debug("\tExpect version: {0}", expectedVersion);
-
                 await connection.AppendToStreamAsync(stream, expectedVersion < 0 ? ExpectedVersion.NoStream : expectedVersion, events);
-                _log.Debug("END");
             }
         }
 
@@ -145,32 +134,32 @@ namespace EventStore.Persistence
             return Task.FromResult<object>(null);
         }
 
-        class ActorRefConverter : JsonConverter
-        {
-            private readonly IActorContext _context;
-
-            public ActorRefConverter(IActorContext context)
-            {
-                _context = context;
-            }
-
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-            {
-                writer.WriteValue(((IActorRef)value).Path.ToStringWithAddress());
-            }
-
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-            {
-                var value = reader.Value.ToString();
-
-                ActorSelection selection = _context.ActorSelection(value);
-                return selection.Anchor;
-            }
-
-            public override bool CanConvert(Type objectType)
-            {
-                return typeof (IActorRef).IsAssignableFrom(objectType);
-            }
-        }
+//        class ActorRefConverter : JsonConverter
+//        {
+//            private readonly IActorContext _context;
+//
+//            public ActorRefConverter(IActorContext context)
+//            {
+//                _context = context;
+//            }
+//
+//            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+//            {
+//                writer.WriteValue(((IActorRef)value).Path.ToStringWithAddress());
+//            }
+//
+//            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+//            {
+//                var value = reader.Value.ToString();
+//
+//                ActorSelection selection = _context.ActorSelection(value);
+//                return selection.Anchor;
+//            }
+//
+//            public override bool CanConvert(Type objectType)
+//            {
+//                return typeof (IActorRef).IsAssignableFrom(objectType);
+//            }
+//        }
     }
 }
