@@ -1,5 +1,5 @@
-﻿using Akka.Actor;
-using Core.Extensions;
+﻿using Akka;
+using Akka.Actor;
 using Core.Messages.Account;
 
 namespace Core.Domain
@@ -16,13 +16,16 @@ namespace Core.Domain
 
         protected override bool Handle(ICommand command)
         {
-            if (command.ReadMessage<GetCurrentBalance>().HasValue)
+            var handled = command.Match().With<GetCurrentBalance>(_ =>
             {
                 Sender.Tell(new CurrentBalanceResponse(command.AggregateId, _state.Balance));
-                return true;
+            }).WasHandled;
+
+            if (!handled)
+            {
+                _state.Handle(command);
             }
 
-            _state.Handle(command);
             return true;
         }
 
@@ -32,16 +35,14 @@ namespace Core.Domain
             return true;
         }
 
-        protected override bool RecoverState(object state)
+        protected override void RecoverState(object state)
         {
-            if (state.CanHandle<AccountState>(x =>
-            {
-                x.Events = this;
-                _state = x;
-            }))
-                return true;
-
-            return false;
+            state.Match()
+                .With<AccountState>(x =>
+                {
+                    x.Events = this;
+                    _state = x;
+                });
         }
 
         protected override object GetState()

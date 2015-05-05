@@ -15,7 +15,7 @@ namespace Core.Storage.Projections.Account
         {
             _storage = Context.ActorOf(Props.Create<FileSystemStorage>(), SystemData.StorageActor.Name);
             _log = Context.GetLogger();
-            BecomeStacked(RetrievingEntity);
+            Become(RetrievingEntity);
         }
 
         private void RetrievingEntity()
@@ -31,7 +31,7 @@ namespace Core.Storage.Projections.Account
             {
                 _log.Info("Account entity retrieved");
                 _entity = (Entities.Account)x.Entity;
-                BecomeStacked(EntityAvailable);
+                Become(EntityAvailable);
                 Stash.Unstash();
             });
         }
@@ -48,6 +48,7 @@ namespace Core.Storage.Projections.Account
             Receive<EntityUpdated>(x =>
             {
                 _log.Info("Account updated.");
+                Become(RetrievingEntity);
             });
         }
 

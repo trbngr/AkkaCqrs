@@ -28,14 +28,17 @@ namespace Core.Storage.FileSystem
             if (!info.Exists)
                 Sender.Tell(new EntityNotFound(message.Key));
 
+            _log.Info("Get entity: {0}/{1:n}", entityType.Name, message.Key);
+
+            object entity;
             using (var stream = new FileStream(info.FullName, FileMode.Open, FileAccess.Read, FileShare.None))
             using (var reader = new StreamReader(stream))
             {
                 var json = reader.ReadToEnd();
-                var entity = JsonConvert.DeserializeObject(json, entityType);
-                _log.Info("Get entity: {0}/{1:n}", entityType.Name, message.Key);
-                Sender.Tell(new EntityRetrieved(message.Key, entity));
+                entity = JsonConvert.DeserializeObject(json, entityType);
             }
+
+            Sender.Tell(new EntityRetrieved(message.Key, entity));
         }
 
         public void Handle(UpdateEntity message)
@@ -46,10 +49,12 @@ namespace Core.Storage.FileSystem
             using (var stream = new FileStream(info.FullName, FileMode.Open, FileAccess.Write, FileShare.None))
             using (var writer = new StreamWriter(stream))
             {
-                writer.Write(JsonConvert.SerializeObject(message.Entity, Formatting.Indented));
-                _log.Info("Update entity: {0}/{1:n}", message.Entity.GetType().Name, message.Key);
-                Sender.Tell(new EntityUpdated(message.Key, message.Entity));
+                var json = JsonConvert.SerializeObject(message.Entity, Formatting.Indented);
+                writer.Write(json);
             }
+
+            _log.Info("Update entity: {0}/{1:n}", message.Entity.GetType().Name, message.Key);
+            Sender.Tell(new EntityUpdated(message.Key, message.Entity));
         }
 
         public void Handle(CreateNewEntity message)
@@ -60,15 +65,16 @@ namespace Core.Storage.FileSystem
             if (info.Exists)
                 Sender.Tell(new EntityAlreadyExists());
 
+            _log.Info("Create entity: {0}/{1:n}", message.Entity.GetType().Name, message.Key);
+
             Directory.CreateDirectory(info.Directory.FullName);
 
             using (var stream = new FileStream(info.FullName, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             using (var writer = new StreamWriter(stream))
             {
                 writer.Write(JsonConvert.SerializeObject(message.Entity, Formatting.Indented));
-                _log.Info("Create entity: {0}/{1:n}", message.Entity.GetType().Name, message.Key);
-                Sender.Tell(new NewEntityCreated(message.Key, message.Entity));
             }
+            Sender.Tell(new NewEntityCreated(message.Key, message.Entity));
         }
 
         private string GetFileName(Guid key, Type entityType)

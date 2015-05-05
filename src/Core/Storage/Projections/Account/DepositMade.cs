@@ -16,7 +16,7 @@ namespace Core.Storage.Projections.Account
         public DepositMade()
         {
             _storage = Context.ActorOf(Props.Create<FileSystemStorage>(), SystemData.StorageActor.Name);
-            BecomeStacked(RetrievingEntity);
+            Become(RetrievingEntity);
             _log = Context.GetLogger();
         }
 
@@ -33,7 +33,7 @@ namespace Core.Storage.Projections.Account
             {
                 _log.Info("Account entity retrieved");
                 _accountEntity = (Entities.Account)x.Entity;
-                BecomeStacked(EntityAvailable);
+                Become(EntityAvailable);
                 Stash.Unstash();
             });
         }
@@ -50,6 +50,7 @@ namespace Core.Storage.Projections.Account
             Receive<EntityUpdated>(x =>
             {
                 _log.Info("Account updated.");
+                Become(RetrievingEntity);
             });
         }
 

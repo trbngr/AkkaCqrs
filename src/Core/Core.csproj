@@ -86,7 +86,6 @@
     <Compile Include="Domain\DomainException.cs" />
     <Compile Include="Domain\IEventSink.cs" />
     <Compile Include="Entities\Account.cs" />
-    <Compile Include="Extensions\Extensions.cs" />
     <Compile Include="Messages\Account\AccountNameChanged.cs" />
     <Compile Include="Messages\Account\ChangeAccountName.cs" />
     <Compile Include="Messages\Account\DepositMade.cs" />

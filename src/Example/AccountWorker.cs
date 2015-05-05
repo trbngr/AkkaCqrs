@@ -24,7 +24,7 @@ namespace Example
 
                 _account.Tell(x);
 
-                BecomeStacked(Created);
+                Become(Created);
             });
         }
 
@@ -39,6 +39,8 @@ namespace Example
                 Console.ReadLine();
                 RunOp();
             });
+
+            Receive<ExitApp>(x => Context.System.Shutdown());
 
             Receive<IEvent>(x =>
             {

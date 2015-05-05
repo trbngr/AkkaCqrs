@@ -9,10 +9,10 @@ namespace Core.Messages
         private readonly bool _success;
         private readonly Exception[] _exceptions;
 
-        public CommandResponse(bool success, IEnumerable<Exception> exceptions)
+        public CommandResponse(bool success, IEnumerable<Exception> exceptions = null)
         {
             _success = success;
-            _exceptions = exceptions.ToArray();
+            _exceptions = exceptions == null ? new Exception[0] : exceptions.ToArray(); 
         }
 
         public bool Success { get { return _success && _exceptions.Length == 0; } }
