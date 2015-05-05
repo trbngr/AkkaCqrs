@@ -87,10 +87,6 @@ namespace EventStore.Persistence
                     foreach (var @event in slice.Events)
                     {
                         var representation = (IPersistentRepresentation)_serializer.FromBinary(@event.OriginalEvent.Data, typeof(IPersistentRepresentation));
-
-//                        var json = Encoding.UTF8.GetString(@event.OriginalEvent.Data);
-//                        var representation = JsonConvert.DeserializeObject<IPersistentRepresentation>(json, _serializerSettings);
-                        _log.Debug("Replay: {0}", representation.Payload.GetType());
                         replayCallback(representation);
                     }
                 
@@ -133,33 +129,5 @@ namespace EventStore.Persistence
         {
             return Task.FromResult<object>(null);
         }
-
-//        class ActorRefConverter : JsonConverter
-//        {
-//            private readonly IActorContext _context;
-//
-//            public ActorRefConverter(IActorContext context)
-//            {
-//                _context = context;
-//            }
-//
-//            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-//            {
-//                writer.WriteValue(((IActorRef)value).Path.ToStringWithAddress());
-//            }
-//
-//            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-//            {
-//                var value = reader.Value.ToString();
-//
-//                ActorSelection selection = _context.ActorSelection(value);
-//                return selection.Anchor;
-//            }
-//
-//            public override bool CanConvert(Type objectType)
-//            {
-//                return typeof (IActorRef).IsAssignableFrom(objectType);
-//            }
-//        }
     }
 }
