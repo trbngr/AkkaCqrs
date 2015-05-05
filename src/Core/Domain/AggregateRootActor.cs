@@ -77,8 +77,15 @@ namespace Core.Domain
                 .With<SaveAggregate>(x => Save())
                 .With<ICommand>(command =>
                 {
-                    var handled = Handle(command);
-                    Sender.Tell(new CommandResponse(handled));
+                    try
+                    {
+                        var handled = Handle(command);
+                        Sender.Tell(new CommandResponse(handled));
+                    }
+                    catch (DomainException e)
+                    {
+                        Sender.Tell(e);
+                    }
                 }).WasHandled;
         }
 

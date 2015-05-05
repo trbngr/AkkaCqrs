@@ -33,20 +33,21 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Akka, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Akka.1.0.0\lib\net45\Akka.dll</HintPath>
+    <Reference Include="Akka, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Akka.1.0.1\lib\net45\Akka.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Akka.DI.AutoFac, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Akka.DI.AutoFac.1.0.0\lib\net45\Akka.DI.AutoFac.dll</HintPath>
+    <Reference Include="Akka.DI.AutoFac, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Akka.DI.AutoFac.1.0.1\lib\net45\Akka.DI.AutoFac.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Akka.DI.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Akka.DI.Core.1.0.0\lib\net45\Akka.DI.Core.dll</HintPath>
+    <Reference Include="Akka.DI.Core, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Akka.DI.Core.1.0.1\lib\net45\Akka.DI.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Akka.Logger.NLog">
-      <HintPath>..\..\packages\Akka.Logger.NLog.1.0.0\lib\net45\Akka.Logger.NLog.dll</HintPath>
+    <Reference Include="Akka.Logger.NLog, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Akka.Logger.NLog.1.0.1\lib\net45\Akka.Logger.NLog.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Akka.Persistence, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Akka.Persistence.1.0.0-pre1504092226\lib\net45\Akka.Persistence.dll</HintPath>
@@ -56,16 +57,16 @@
       <HintPath>..\..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="EventStore.ClientAPI, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\EventStore.Client.3.0.1\lib\net40\EventStore.ClientAPI.dll</HintPath>
+    <Reference Include="EventStore.ClientAPI, Version=3.0.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\EventStore.Client.3.0.2\lib\net40\EventStore.ClientAPI.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Google.ProtocolBuffers, Version=2.4.1.521, Culture=neutral, PublicKeyToken=55f7125234beb589, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Google.ProtocolBuffers.2.4.1.521\lib\net40\Google.ProtocolBuffers.dll</HintPath>
+    <Reference Include="Google.ProtocolBuffers, Version=2.4.1.555, Culture=neutral, PublicKeyToken=55f7125234beb589, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Google.ProtocolBuffers.2.4.1.555\lib\net40\Google.ProtocolBuffers.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Google.ProtocolBuffers.Serialization, Version=2.4.1.521, Culture=neutral, PublicKeyToken=55f7125234beb589, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Google.ProtocolBuffers.2.4.1.521\lib\net40\Google.ProtocolBuffers.Serialization.dll</HintPath>
+    <Reference Include="Google.ProtocolBuffers.Serialization, Version=2.4.1.555, Culture=neutral, PublicKeyToken=55f7125234beb589, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Google.ProtocolBuffers.2.4.1.555\lib\net40\Google.ProtocolBuffers.Serialization.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -84,8 +85,9 @@
       <HintPath>..\..\packages\Nito.AsyncEx.3.0.0\lib\net45\Nito.AsyncEx.Enlightenment.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="NLog">
-      <HintPath>..\..\packages\NLog.3.0.0.0\lib\net45\NLog.dll</HintPath>
+    <Reference Include="NLog, Version=3.2.1.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\NLog.3.2.1\lib\net45\NLog.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -106,9 +108,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
-    <None Include="protos\google\protobuf\csharp_options.proto" />
-    <None Include="protos\google\protobuf\descriptor.proto" />
-    <None Include="protos\tutorial\addressbook.proto" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Akka.Persistence.EventStore\Akka.Persistence.EventStore.csproj">
@@ -119,11 +118,6 @@
       <Project>{BDD4E169-09F8-4D09-AAC6-1C5AFE56EC6F}</Project>
       <Name>Core</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="CHANGES.txt" />
-    <Content Include="licenses\license.txt" />
-    <Content Include="licenses\protoc-license.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

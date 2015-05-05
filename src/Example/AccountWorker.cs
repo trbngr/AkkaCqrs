@@ -1,5 +1,5 @@
 ﻿using System;
-using System.IO;
+using System.Threading.Tasks;
 using Akka.Actor;
 using Core;
 using Core.Domain;
@@ -32,25 +32,22 @@ namespace Example
         {
             Receive<ExitApp>(x => Context.System.Shutdown());
 
-            Receive<DomainException>(x =>
+            Receive<DomainException>(async x =>
             {
                 Console.Out.WriteLine("ERROR: {0}", x.Message);
                 Console.Out.WriteLine("Press [Enter] to continue.");
                 Console.ReadLine();
-                RunOp();
+                await RunOp();
             });
 
             Receive<ExitApp>(x => Context.System.Shutdown());
 
-            Receive<IEvent>(x =>
-            {
-                RunOp();
-            });
+            Receive<IEvent>(async x => await RunOp());
         }
 
-        private void RunOp()
+        private async Task RunOp()
         {
-            var response = _account.Ask<CurrentBalanceResponse>(new GetCurrentBalance(_id)).Result;
+            var response = await _account.Ask<CurrentBalanceResponse>(new GetCurrentBalance(_id));
             Console.Clear();
             Console.Out.WriteLine("Current Balance: {0:C}", response.Balance);
             Console.Out.WriteLine("-------------");
@@ -66,6 +63,7 @@ namespace Example
                     case 1:
                     {
                         Console.Write("Amount?: ");
+                        // ReSharper disable once AssignNullToNotNullAttribute
                         var amount = decimal.Parse(Console.ReadLine());
                         _account.Tell(new MakeWithdrawal(_id, amount));
                         break;
@@ -73,6 +71,7 @@ namespace Example
                     case 2:
                     {
                         Console.Write("Amount?: ");
+                        // ReSharper disable once AssignNullToNotNullAttribute
                         var amount = decimal.Parse(Console.ReadLine());
                         _account.Tell(new MakeDeposit(_id, amount));
                         break;
